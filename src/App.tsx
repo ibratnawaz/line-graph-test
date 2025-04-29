@@ -1,5 +1,5 @@
 import "./styles.css";
-import TimelineChart from "./Timeline2";
+import TimelineChart from "./Timeline3";
 
 export default function App() {
   return (
