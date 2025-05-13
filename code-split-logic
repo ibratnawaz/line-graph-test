@@ -1,0 +1,18 @@
+// index.js (bootstraps everything via dynamic imports)
+
+(async () => {
+  // 1) Load vendor libs first
+  const [ReactModule, ReactDOMModule] = await Promise.all([
+    import('react'),
+    import('react-dom/client'),
+  ]);
+  const React    = ReactModule.default;
+  const ReactDOM = ReactDOMModule.default;
+
+  // 2) Then load your App component
+  const { default: App } = await import('./App');
+
+  // 3) Mount it
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+})();
