@@ -1,18 +1,39 @@
-// index.js (bootstraps everything via dynamic imports)
+// index.js — bootstrap only, everything else is dynamic
+
+// still include your global styles and CSS frameworks here:
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './index.scss';
 
 (async () => {
-  // 1) Load vendor libs first
-  const [ReactModule, ReactDOMModule] = await Promise.all([
+  // 1) Dynamically load vendor libs
+  const [
+    { default: React },
+    { createRoot },
+    { BrowserRouter }
+  ] = await Promise.all([
     import('react'),
     import('react-dom/client'),
+    import('react-router-dom')
   ]);
-  const React    = ReactModule.default;
-  const ReactDOM = ReactDOMModule.default;
 
-  // 2) Then load your App component
+  // 2) Then load your application
   const { default: App } = await import('./App');
 
-  // 3) Mount it
-  const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(<App />);
+  // 3) Mount your app
+  const rootElement = document.getElementById('app');
+  if (!rootElement) {
+    console.error('RENDER ERROR: Root element not found!');
+    return;
+  }
+  const root = createRoot(rootElement);
+  root.render(
+    // Uncomment StrictMode if you like
+    // <React.StrictMode>
+      React.createElement(
+        BrowserRouter,
+        null,
+        React.createElement(App, null)
+      )
+    // </React.StrictMode>
+  );
 })();
