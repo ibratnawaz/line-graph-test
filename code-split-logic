@@ -37,3 +37,39 @@ import './index.scss';
     // </React.StrictMode>
   );
 })();
+
+
+////////////////////////////////////////////////
+
+import { useEffect, useTransition } from 'react';
+
+function App() {
+  const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    // 1) Wait for the browser to be idle (after paint)
+    const handle =
+      typeof window.requestIdleCallback === 'function'
+        ? window.requestIdleCallback
+        : (cb: () => void) => {
+            // fallback to next tick
+            const id = window.setTimeout(cb, 0);
+            return () => clearTimeout(id);
+          };
+
+    const cancel = handle(() => {
+      // 2) Now schedule your filters update at low React priority
+      startTransition(() => {
+        setFilters(initFilters);
+      });
+    });
+
+    return () => {
+      // cleanup if unmounted early
+      cancel();
+    };
+  }, []); // run once, after first mount
+
+  return <YourAppUI />;
+}
+
