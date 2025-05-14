@@ -41,35 +41,38 @@ import './index.scss';
 
 ////////////////////////////////////////////////
 
-import { useEffect, useTransition } from 'react';
+useEffect(() => {
+    // 1) Create an `idleCallback` helper that always returns a cancellation fn
+    const idleCallback = (() => {
+      if (typeof window.requestIdleCallback === 'function') {
+        return (cb: () => void) => {
+          // schedule on idle
+          const id = window.requestIdleCallback(cb);
+          // return a fn that cancels that idle callback
+          return () => window.cancelIdleCallback(id);
+        };
+      } else {
+        return (cb: () => void) => {
+          // fallback to a zero‑delay timeout
+          const id = window.setTimeout(cb, 0);
+          // return a fn that clears that timeout
+          return () => window.clearTimeout(id);
+        };
+      }
+    })();
 
-function App() {
-  const [, startTransition] = useTransition();
-
-  useEffect(() => {
-    // 1) Wait for the browser to be idle (after paint)
-    const handle =
-      typeof window.requestIdleCallback === 'function'
-        ? window.requestIdleCallback
-        : (cb: () => void) => {
-            // fallback to next tick
-            const id = window.setTimeout(cb, 0);
-            return () => clearTimeout(id);
-          };
-
-    const cancel = handle(() => {
-      // 2) Now schedule your filters update at low React priority
+    // 2) Use it. It’ll always give you back a `cancelIdle` function.
+    const cancelIdle = idleCallback(() => {
+      // now that the browser is idle (and has painted),
+      // schedule your filters update as a low‑priority React update:
       startTransition(() => {
         setFilters(initFilters);
       });
     });
 
+    // 3) Clean up if the component unmounts early
     return () => {
-      // cleanup if unmounted early
-      cancel();
+      cancelIdle();
     };
-  }, []); // run once, after first mount
-
-  return <YourAppUI />;
-}
+  }, []);
 
